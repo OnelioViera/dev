@@ -428,6 +428,30 @@ function Field({ label, children, full }: { label: string; children: ReactNode; 
   );
 }
 
+// A number input that shows a grayed-out "0" placeholder instead of a hard 0 sitting in the
+// field. A stored value of 0 (the default for a brand-new part) displays as blank; typing a
+// real number fills it in, and clearing the field goes back to the blank placeholder (which
+// still saves as 0 underneath — these fields don't have a separate "unset" state in the DB).
+function NumberField({
+  value,
+  onChange,
+  className = "input",
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  className?: string;
+}) {
+  return (
+    <input
+      type="number"
+      className={`${className} placeholder:text-slate-400`}
+      value={value === 0 ? "" : value}
+      placeholder="0"
+      onChange={(e) => onChange(e.target.value === "" ? 0 : parseFloat(e.target.value) || 0)}
+    />
+  );
+}
+
 function PartRowEditor({
   part,
   status,
@@ -503,16 +527,16 @@ function PartRowEditor({
 
           {part.shape === "round" ? (
             <Field label="Diameter (in)">
-              <input type="number" className="input" value={part.diameter_in} onChange={(e) => updatePartField(part.id, "diameter_in", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.diameter_in} onChange={(v) => updatePartField(part.id, "diameter_in", v)} />
               {out?.diameterIn && <p className="text-[11px] text-slate-500 mt-1">→ Ø{out.diameterIn.toFixed(2)}&quot; outside</p>}
             </Field>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <Field label="Length (in)">
-                <input type="number" className="input" value={part.length_in} onChange={(e) => updatePartField(part.id, "length_in", parseFloat(e.target.value) || 0)} />
+                <NumberField value={part.length_in} onChange={(v) => updatePartField(part.id, "length_in", v)} />
               </Field>
               <Field label="Width (in)">
-                <input type="number" className="input" value={part.width_in} onChange={(e) => updatePartField(part.id, "width_in", parseFloat(e.target.value) || 0)} />
+                <NumberField value={part.width_in} onChange={(v) => updatePartField(part.id, "width_in", v)} />
               </Field>
               {out?.lengthIn && (
                 <p className="text-[11px] text-slate-500 col-span-2">
@@ -524,34 +548,34 @@ function PartRowEditor({
 
           {isWall && (
             <Field label="Wall Thickness (in)">
-              <input type="number" className="input" value={part.wall_thickness_in} onChange={(e) => updatePartField(part.id, "wall_thickness_in", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.wall_thickness_in} onChange={(v) => updatePartField(part.id, "wall_thickness_in", v)} />
             </Field>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Weight (lbs)">
-              <input type="number" className="input" value={part.weight_lbs} onChange={(e) => updatePartField(part.id, "weight_lbs", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.weight_lbs} onChange={(v) => updatePartField(part.id, "weight_lbs", v)} />
             </Field>
             <Field label="Cubic Yards">
-              <input type="number" className="input" value={part.cubic_yards} onChange={(e) => updatePartField(part.id, "cubic_yards", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.cubic_yards} onChange={(v) => updatePartField(part.id, "cubic_yards", v)} />
             </Field>
             <Field label="Height (in)">
-              <input type="number" className="input" value={part.height} onChange={(e) => updatePartField(part.id, "height", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.height} onChange={(v) => updatePartField(part.id, "height", v)} />
             </Field>
             <Field label={isWall ? "Wall-check thickness" : "Lid / Slab Thickness (in)"}>
-              <input type="number" className="input" value={part.thickness_in} onChange={(e) => updatePartField(part.id, "thickness_in", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.thickness_in} onChange={(v) => updatePartField(part.id, "thickness_in", v)} />
             </Field>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Field label="Edge Distance — Top (in)">
-              <input type="number" className="input" value={part.edge_distance_top_in} onChange={(e) => updatePartField(part.id, "edge_distance_top_in", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.edge_distance_top_in} onChange={(v) => updatePartField(part.id, "edge_distance_top_in", v)} />
             </Field>
             <Field label="Edge Distance — Bottom (in)">
-              <input type="number" className="input" value={part.edge_distance_bottom_in} onChange={(e) => updatePartField(part.id, "edge_distance_bottom_in", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.edge_distance_bottom_in} onChange={(v) => updatePartField(part.id, "edge_distance_bottom_in", v)} />
             </Field>
             <Field label="Edge Distance — Side (in)">
-              <input type="number" className="input" value={part.edge_distance_side_in} onChange={(e) => updatePartField(part.id, "edge_distance_side_in", parseFloat(e.target.value) || 0)} />
+              <NumberField value={part.edge_distance_side_in} onChange={(v) => updatePartField(part.id, "edge_distance_side_in", v)} />
             </Field>
           </div>
 
