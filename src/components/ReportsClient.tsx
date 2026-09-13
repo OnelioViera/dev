@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import PrintableReport from "@/components/PrintableReport";
 import type { ReportRow } from "@/lib/types";
 
 const RESULT_STYLE: Record<string, string> = {
@@ -23,7 +24,8 @@ export default function ReportsClient({ initialReports }: { initialReports: Repo
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <>
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 print:hidden">
       <h2 className="text-sm font-bold text-blue-900 mb-1">Saved Reports</h2>
       <p className="text-xs text-slate-500 mb-3">Point-in-time snapshots of the structure, saved from New Analysis. Viewing a saved report does not change your live parts list.</p>
 
@@ -74,16 +76,21 @@ export default function ReportsClient({ initialReports }: { initialReports: Repo
       {open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setOpen(null)}>
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start justify-between mb-3 gap-3">
               <div>
                 <h3 className="font-bold text-blue-900">{open.job_name || "(no job name)"}</h3>
                 <p className="text-xs text-slate-500">
                   {open.customer} · Job #{open.job_number} · Structure {open.structure_id}
                 </p>
               </div>
-              <button onClick={() => setOpen(null)} className="text-slate-400 hover:text-slate-700">
-                ✕
-              </button>
+              <div className="flex items-center gap-3 shrink-0">
+                <button onClick={() => window.print()} className="btn-secondary">
+                  Print / Save as PDF
+                </button>
+                <button onClick={() => setOpen(null)} className="text-slate-400 hover:text-slate-700">
+                  ✕
+                </button>
+              </div>
             </div>
             <p className="text-xs text-slate-500 mb-3">Saved {new Date(open.created_at).toLocaleString()}</p>
             <div className="overflow-x-auto">
@@ -112,5 +119,7 @@ export default function ReportsClient({ initialReports }: { initialReports: Repo
         </div>
       )}
     </div>
+    {open && <PrintableReport report={open} />}
+    </>
   );
 }

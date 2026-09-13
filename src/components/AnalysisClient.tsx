@@ -492,7 +492,12 @@ function PartRowEditor({
           <span className="font-semibold truncate">{part.name || "(unnamed part)"}</span>
           <span className="text-xs text-slate-500 hidden sm:inline">{pieceRoles.find((r) => r.id === part.piece_role)?.label}</span>
         </span>
-        <span className={`shrink-0 text-[11px] font-bold border rounded-full px-2 py-0.5 ${STATUS_STYLE[status.state]}`}>{STATUS_LABEL[status.state]}</span>
+        <span className="flex items-center gap-2 shrink-0">
+          {status.worstUtil !== null && status.worstUtil !== undefined && (
+            <span className="text-[11px] text-slate-500 hidden sm:inline">{Math.round(status.worstUtil)}% capacity</span>
+          )}
+          <span className={`text-[11px] font-bold border rounded-full px-2 py-0.5 ${STATUS_STYLE[status.state]}`}>{STATUS_LABEL[status.state]}</span>
+        </span>
       </button>
 
       {open && (
@@ -754,9 +759,24 @@ function EntryResult({
   } else {
     checks.push("no rating for this orientation");
   }
+  const utilPct = ev.utilization !== null && ev.utilization !== undefined ? Math.round(ev.utilization) : null;
+  const utilBarColor = utilPct === null ? "bg-slate-300" : utilPct > 100 ? "bg-red-500" : utilPct >= 85 ? "bg-amber-500" : "bg-green-500";
   return (
-    <div className={`mt-2 text-[11px] rounded px-2 py-1 border ${pass ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
-      {pass ? "Pass" : "Fail"} — {checks.join(", ")}
+    <div className="mt-2 space-y-1.5">
+      <div className={`text-[11px] rounded px-2 py-1 border ${pass ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+        {pass ? "Pass" : "Fail"} — {checks.join(", ")}
+      </div>
+      {utilPct !== null && (
+        <div className="px-0.5">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 mb-0.5">
+            <span>Lift capacity used</span>
+            <span className="font-semibold text-slate-700">{utilPct}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+            <div className={`h-full rounded-full ${utilBarColor}`} style={{ width: `${Math.min(100, utilPct)}%` }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
