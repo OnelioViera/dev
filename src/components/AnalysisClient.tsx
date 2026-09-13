@@ -7,6 +7,8 @@ import {
   computePartCalc,
   entryGoverningNumbers,
   evaluateAnchorEntry,
+  evaluateLifter,
+  evaluateStripperEntry,
   newAnchorEntry,
   outsideDims,
   partOverallStatus,
@@ -630,7 +632,34 @@ function AnchorEntryRow({
   onChange: (patch: Partial<AnchorEntry>) => void;
   onRemove: () => void;
 }) {
+  const [showAll, setShowAll] = useState(false);
   const lifter = entry.lifterId ? liftersById[entry.lifterId] : null;
+  const p = partRowToPart(part);
+  const roleHasWallFn = (pt: ReturnType<typeof partRowToPart>) => roleHasWall(pieceRoles, pt);
+  const calc = computePartCalc(p, settings);
+
+  // Work out, for every lifter in the (library- or catalog-scoped) list, whether it would
+  // actually pass for THIS entry's type + location on THIS part's current dimensions — so the
+  // dropdown can default to only offering options that will work instead of making the user
+  // pick blind and land on Fail.
+  const passingIds = new Set<string>();
+  Object.values(groupedLifters).forEach((list) => {
+    list.forEach((l) => {
+      const ev =
+        entry.type === "stripper"
+          ? evaluateStripperEntry(l, p, settings, entry.location, roleHasWallFn)
+          : evaluateLifter(l, calc, p, settings, entry.location, roleHasWallFn);
+      if (ev.pass) passingIds.add(l.id);
+    });
+  });
+  const anyPassing = passingIds.size > 0;
+
+  const visibleGroups: Record<string, Lifter[]> = {};
+  Object.entries(groupedLifters).forEach(([group, list]) => {
+    const visible = list.filter((l) => showAll || passingIds.has(l.id) || l.id === entry.lifterId);
+    if (visible.length) visibleGroups[group] = visible;
+  });
+
   return (
     <div className="border border-slate-200 rounded-md bg-white p-2">
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -645,11 +674,12 @@ function AnchorEntryRow({
         </select>
         <select className="input flex-1 min-w-[220px]" value={entry.lifterId || ""} onChange={(e) => onChange({ lifterId: e.target.value || null })}>
           <option value="">— not selected —</option>
-          {Object.entries(groupedLifters).map(([group, list]) => (
+          {Object.entries(visibleGroups).map(([group, list]) => (
             <optgroup label={group} key={group}>
               {list.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.id} ({l.size})
+                  {!passingIds.has(l.id) ? " — does not meet requirements" : ""}
                 </option>
               ))}
             </optgroup>
@@ -659,6 +689,16 @@ function AnchorEntryRow({
           ✕
         </button>
       </div>
+      <label className="flex items-center gap-1.5 mt-1.5 text-[11px] text-slate-500">
+        <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+        Show all options (including ones that won&apos;t meet requirements)
+      </label>
+      {!anyPassing && !showAll && (
+        <p className="mt-1 text-[11px] text-amber-700">
+          Nothing in {settings.useFullCatalog ? "the ALP catalog" : "your Lifter Library"} currently meets the thickness / edge distance / load requirements for
+          this entry — check the part&apos;s dimensions above, or check &quot;Show all options&quot; to browse anyway.
+        </p>
+      )}
       {lifter && <EntryResult entry={entry} part={part} pieceRoles={pieceRoles} settings={settings} />}
     </div>
   );
