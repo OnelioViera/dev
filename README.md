@@ -1,6 +1,8 @@
 # ALP Lifter Selector — Next.js + Supabase
 
 This is a rebuild of the original single-file ALP Lifter Selector (the
+
+
 `localStorage`-based HTML tool) as a real multi-device app: Next.js (App
 Router) on Vercel, backed by Supabase (Postgres + Auth). Each signed-in user
 gets their own private job, lifter library, and saved reports — nothing is
